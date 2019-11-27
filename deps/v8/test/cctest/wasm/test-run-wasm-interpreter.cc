@@ -449,7 +449,6 @@ TEST(ReferenceTypeLocals) {
     BUILD(r, WASM_REF_IS_NULL(WASM_TEE_LOCAL(0, WASM_REF_NULL)));
     CHECK_EQ(1, r.Call());
   }
-  // TODO(mstarzinger): Test and support global anyref variables.
 }
 
 TEST(TestPossibleNondeterminism) {
@@ -576,7 +575,7 @@ TEST(WasmInterpreterActivations) {
   CHECK_EQ(2, thread->NumActivations());
   CHECK_EQ(2, thread->GetFrameCount());
   CHECK_EQ(WasmInterpreter::TRAPPED, thread->Run());
-  thread->RaiseException(isolate, handle(Smi::kZero, isolate));
+  thread->RaiseException(isolate, handle(Smi::zero(), isolate));
   CHECK_EQ(1, thread->GetFrameCount());
   CHECK_EQ(2, thread->NumActivations());
   thread->FinishActivation(act1);
@@ -584,7 +583,7 @@ TEST(WasmInterpreterActivations) {
   CHECK_EQ(1, thread->GetFrameCount());
   CHECK_EQ(1, thread->NumActivations());
   CHECK_EQ(WasmInterpreter::TRAPPED, thread->Run());
-  thread->RaiseException(isolate, handle(Smi::kZero, isolate));
+  thread->RaiseException(isolate, handle(Smi::zero(), isolate));
   CHECK_EQ(0, thread->GetFrameCount());
   CHECK_EQ(1, thread->NumActivations());
   thread->FinishActivation(act0);

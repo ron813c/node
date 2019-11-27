@@ -326,9 +326,6 @@ int InstructionScheduler::GetTargetInstructionFlags(
     case kArm64TestAndBranch:
     case kArm64CompareAndBranch32:
     case kArm64CompareAndBranch:
-    case kArm64DecompressSigned:
-    case kArm64DecompressPointer:
-    case kArm64DecompressAny:
       return kNoOpcodeFlags;
 
     case kArm64LdrS:
@@ -345,6 +342,16 @@ int InstructionScheduler::GetTargetInstructionFlags(
     case kArm64LdrDecompressTaggedPointer:
     case kArm64LdrDecompressAnyTagged:
     case kArm64Peek:
+    case kArm64S8x16LoadSplat:
+    case kArm64S16x8LoadSplat:
+    case kArm64S32x4LoadSplat:
+    case kArm64S64x2LoadSplat:
+    case kArm64I16x8Load8x8S:
+    case kArm64I16x8Load8x8U:
+    case kArm64I32x4Load16x4S:
+    case kArm64I32x4Load16x4U:
+    case kArm64I64x2Load32x2S:
+    case kArm64I64x2Load32x2U:
       return kIsLoadOperation;
 
     case kArm64Claim:

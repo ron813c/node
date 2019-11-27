@@ -602,7 +602,7 @@ void ArrayLiteral::BuildBoilerplateDescription(Isolate* isolate) {
     }
 
     if (boilerplate_value->IsUninitialized(isolate)) {
-      boilerplate_value = handle(Smi::kZero, isolate);
+      boilerplate_value = handle(Smi::zero(), isolate);
     }
 
     kind = GetMoreGeneralElementsKind(
@@ -845,10 +845,6 @@ Call::CallType Call::GetCallType() const {
     } else {
       return is_super ? KEYED_SUPER_PROPERTY_CALL : KEYED_PROPERTY_CALL;
     }
-  }
-
-  if (expression()->IsResolvedProperty()) {
-    return RESOLVED_PROPERTY_CALL;
   }
 
   return OTHER_CALL;

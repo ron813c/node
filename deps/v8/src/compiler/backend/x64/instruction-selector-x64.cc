@@ -241,7 +241,6 @@ ArchOpcode GetLoadOpcode(LoadRepresentation load_rep) {
     case MachineRepresentation::kWord32:
       opcode = kX64Movl;
       break;
-    case MachineRepresentation::kCompressedSigned:   // Fall through.
     case MachineRepresentation::kCompressedPointer:  // Fall through.
     case MachineRepresentation::kCompressed:
 #ifdef V8_COMPRESS_POINTERS
@@ -290,7 +289,6 @@ ArchOpcode GetStoreOpcode(StoreRepresentation store_rep) {
       return kX64Movw;
     case MachineRepresentation::kWord32:
       return kX64Movl;
-    case MachineRepresentation::kCompressedSigned:   // Fall through.
     case MachineRepresentation::kCompressedPointer:  // Fall through.
     case MachineRepresentation::kCompressed:
 #ifdef V8_COMPRESS_POINTERS
@@ -326,6 +324,52 @@ void InstructionSelector::VisitStackSlot(Node* node) {
 void InstructionSelector::VisitAbortCSAAssert(Node* node) {
   X64OperandGenerator g(this);
   Emit(kArchAbortCSAAssert, g.NoOutput(), g.UseFixed(node->InputAt(0), rdx));
+}
+
+void InstructionSelector::VisitLoadTransform(Node* node) {
+  LoadTransformParameters params = LoadTransformParametersOf(node->op());
+  ArchOpcode opcode = kArchNop;
+  switch (params.transformation) {
+    case LoadTransformation::kS8x16LoadSplat:
+      opcode = kX64S8x16LoadSplat;
+      break;
+    case LoadTransformation::kS16x8LoadSplat:
+      opcode = kX64S16x8LoadSplat;
+      break;
+    case LoadTransformation::kS32x4LoadSplat:
+      opcode = kX64S32x4LoadSplat;
+      break;
+    case LoadTransformation::kS64x2LoadSplat:
+      opcode = kX64S64x2LoadSplat;
+      break;
+    case LoadTransformation::kI16x8Load8x8S:
+      opcode = kX64I16x8Load8x8S;
+      break;
+    case LoadTransformation::kI16x8Load8x8U:
+      opcode = kX64I16x8Load8x8U;
+      break;
+    case LoadTransformation::kI32x4Load16x4S:
+      opcode = kX64I32x4Load16x4S;
+      break;
+    case LoadTransformation::kI32x4Load16x4U:
+      opcode = kX64I32x4Load16x4U;
+      break;
+    case LoadTransformation::kI64x2Load32x2S:
+      opcode = kX64I64x2Load32x2S;
+      break;
+    case LoadTransformation::kI64x2Load32x2U:
+      opcode = kX64I64x2Load32x2U;
+      break;
+    default:
+      UNREACHABLE();
+  }
+  // x64 supports unaligned loads
+  DCHECK_NE(params.kind, LoadKind::kUnaligned);
+  InstructionCode code = opcode;
+  if (params.kind == LoadKind::kProtected) {
+    code |= MiscField::encode(kMemoryAccessProtected);
+  }
+  VisitLoad(node, node, code);
 }
 
 void InstructionSelector::VisitLoad(Node* node, Node* value,
@@ -545,14 +589,18 @@ void InstructionSelector::VisitWord64Xor(Node* node) {
 
 void InstructionSelector::VisitStackPointerGreaterThan(
     Node* node, FlagsContinuation* cont) {
-  Node* const value = node->InputAt(0);
-  InstructionCode opcode = kArchStackPointerGreaterThan;
+  StackCheckKind kind = StackCheckKindOf(node->op());
+  InstructionCode opcode =
+      kArchStackPointerGreaterThan | MiscField::encode(static_cast<int>(kind));
 
-  DCHECK(cont->IsBranch());
-  const int effect_level =
-      GetEffectLevel(cont->true_block()->PredecessorAt(0)->control_input());
+  int effect_level = GetEffectLevel(node);
+  if (cont->IsBranch()) {
+    effect_level =
+        GetEffectLevel(cont->true_block()->PredecessorAt(0)->control_input());
+  }
 
   X64OperandGenerator g(this);
+  Node* const value = node->InputAt(0);
   if (g.CanBeMemoryOperand(kX64Cmp, node, value, effect_level)) {
     DCHECK_EQ(IrOpcode::kLoad, value->opcode());
 
@@ -592,7 +640,6 @@ bool TryMergeTruncateInt64ToInt32IntoLoad(InstructionSelector* selector,
       case MachineRepresentation::kWord64:
       case MachineRepresentation::kTaggedSigned:
       case MachineRepresentation::kTagged:
-      case MachineRepresentation::kCompressedSigned:  // Fall through.
       case MachineRepresentation::kCompressed:        // Fall through.
         opcode = kX64Movl;
         break;
@@ -1178,6 +1225,12 @@ void InstructionSelector::VisitTryTruncateFloat64ToUint64(Node* node) {
   Emit(kSSEFloat64ToUint64, output_count, outputs, 1, inputs);
 }
 
+void InstructionSelector::VisitBitcastWord32ToWord64(Node* node) {
+  DCHECK(SmiValuesAre31Bits());
+  DCHECK(COMPRESS_POINTERS_BOOL);
+  EmitIdentity(node);
+}
+
 void InstructionSelector::VisitChangeInt32ToInt64(Node* node) {
   X64OperandGenerator g(this);
   Node* const value = node->InputAt(0);
@@ -1289,64 +1342,6 @@ void InstructionSelector::VisitChangeTaggedToCompressed(Node* node) {
   // The top 32 bits in the 64-bit register will be undefined, and
   // must not be used by a dependent node.
   return EmitIdentity(node);
-}
-
-void InstructionSelector::VisitChangeTaggedPointerToCompressedPointer(
-    Node* node) {
-  // The top 32 bits in the 64-bit register will be undefined, and
-  // must not be used by a dependent node.
-  return EmitIdentity(node);
-}
-
-void InstructionSelector::VisitChangeTaggedSignedToCompressedSigned(
-    Node* node) {
-  // The top 32 bits in the 64-bit register will be undefined, and
-  // must not be used by a dependent node.
-  return EmitIdentity(node);
-}
-
-void InstructionSelector::VisitChangeCompressedToTagged(Node* node) {
-  Node* const value = node->InputAt(0);
-  if ((value->opcode() == IrOpcode::kLoad ||
-       value->opcode() == IrOpcode::kPoisonedLoad) &&
-      CanCover(node, value)) {
-    DCHECK_EQ(LoadRepresentationOf(value->op()).representation(),
-              MachineRepresentation::kCompressed);
-    VisitLoad(node, value, kX64MovqDecompressAnyTagged);
-  } else {
-    X64OperandGenerator g(this);
-    Emit(kX64DecompressAny, g.DefineAsRegister(node), g.Use(value));
-  }
-}
-
-void InstructionSelector::VisitChangeCompressedPointerToTaggedPointer(
-    Node* node) {
-  Node* const value = node->InputAt(0);
-  if ((value->opcode() == IrOpcode::kLoad ||
-       value->opcode() == IrOpcode::kPoisonedLoad) &&
-      CanCover(node, value)) {
-    DCHECK_EQ(LoadRepresentationOf(value->op()).representation(),
-              MachineRepresentation::kCompressedPointer);
-    VisitLoad(node, value, kX64MovqDecompressTaggedPointer);
-  } else {
-    X64OperandGenerator g(this);
-    Emit(kX64DecompressPointer, g.DefineAsRegister(node), g.Use(value));
-  }
-}
-
-void InstructionSelector::VisitChangeCompressedSignedToTaggedSigned(
-    Node* node) {
-  Node* const value = node->InputAt(0);
-  if ((value->opcode() == IrOpcode::kLoad ||
-       value->opcode() == IrOpcode::kPoisonedLoad) &&
-      CanCover(node, value)) {
-    DCHECK_EQ(LoadRepresentationOf(value->op()).representation(),
-              MachineRepresentation::kCompressedSigned);
-    VisitLoad(node, value, kX64MovqDecompressTaggedSigned);
-  } else {
-    X64OperandGenerator g(this);
-    Emit(kX64DecompressSigned, g.DefineAsRegister(node), g.Use(value));
-  }
 }
 
 namespace {
@@ -2895,6 +2890,21 @@ void InstructionSelector::VisitF64x2Neg(Node* node) {
        arraysize(temps), temps);
 }
 
+void InstructionSelector::VisitF64x2SConvertI64x2(Node* node) {
+  X64OperandGenerator g(this);
+  InstructionOperand temps[] = {g.TempRegister(), g.TempRegister()};
+  Emit(kX64F64x2SConvertI64x2, g.DefineSameAsFirst(node),
+       g.UseRegister(node->InputAt(0)), arraysize(temps), temps);
+}
+
+void InstructionSelector::VisitF64x2UConvertI64x2(Node* node) {
+  X64OperandGenerator g(this);
+  InstructionOperand temps[] = {g.TempRegister(), g.TempSimd128Register()};
+  // Need dst to be unique to temp because Cvtqui2sd will zero temp.
+  Emit(kX64F64x2UConvertI64x2, g.DefineSameAsFirst(node),
+       g.UseUniqueRegister(node->InputAt(0)), arraysize(temps), temps);
+}
+
 void InstructionSelector::VisitF32x4UConvertI32x4(Node* node) {
   X64OperandGenerator g(this);
   Emit(kX64F32x4UConvertI32x4, g.DefineSameAsFirst(node),
@@ -3241,8 +3251,12 @@ void InstructionSelector::VisitS8x16Shuffle(Node* node) {
         opcode = kX64S32x4Shuffle;
         no_same_as_first = true;
         src0_needs_reg = false;
+        // TODO(v8:9083): src1 is used by pshufd in codegen, which requires
+        // memory to be 16-byte aligned, since we cannot guarantee that yet,
+        // force using a register here.
+        src1_needs_reg = true;
         imms[imm_count++] = shuffle_mask;
-        int8_t blend_mask = PackBlend4(shuffle32x4);
+        uint8_t blend_mask = PackBlend4(shuffle32x4);
         imms[imm_count++] = blend_mask;
       }
     }

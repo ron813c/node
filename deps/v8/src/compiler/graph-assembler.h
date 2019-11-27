@@ -18,101 +18,104 @@ class Graph;
 
 namespace compiler {
 
-#define PURE_ASSEMBLER_MACH_UNOP_LIST(V)    \
-  V(ChangeInt32ToInt64)                     \
-  V(ChangeInt32ToFloat64)                   \
-  V(ChangeInt64ToFloat64)                   \
-  V(ChangeUint32ToFloat64)                  \
-  V(ChangeUint32ToUint64)                   \
-  V(ChangeFloat64ToInt32)                   \
-  V(ChangeFloat64ToInt64)                   \
-  V(ChangeFloat64ToUint32)                  \
-  V(TruncateInt64ToInt32)                   \
-  V(RoundFloat64ToInt32)                    \
-  V(TruncateFloat64ToInt64)                 \
-  V(TruncateFloat64ToWord32)                \
-  V(Float64ExtractLowWord32)                \
-  V(Float64ExtractHighWord32)               \
-  V(BitcastInt32ToFloat32)                  \
-  V(BitcastInt64ToFloat64)                  \
-  V(BitcastFloat32ToInt32)                  \
-  V(BitcastFloat64ToInt64)                  \
-  V(Float64Abs)                             \
-  V(Word32ReverseBytes)                     \
-  V(Word64ReverseBytes)                     \
-  V(Float64SilenceNaN)                      \
-  V(ChangeCompressedToTagged)               \
-  V(ChangeTaggedToCompressed)               \
-  V(ChangeTaggedSignedToCompressedSigned)   \
-  V(ChangeCompressedSignedToTaggedSigned)   \
-  V(ChangeTaggedPointerToCompressedPointer) \
-  V(ChangeCompressedPointerToTaggedPointer)
+class Schedule;
+class BasicBlock;
+
+#define PURE_ASSEMBLER_MACH_UNOP_LIST(V) \
+  V(BitcastFloat32ToInt32)               \
+  V(BitcastFloat64ToInt64)               \
+  V(BitcastInt32ToFloat32)               \
+  V(BitcastWord32ToWord64)               \
+  V(BitcastInt64ToFloat64)               \
+  V(ChangeFloat64ToInt32)                \
+  V(ChangeFloat64ToInt64)                \
+  V(ChangeFloat64ToUint32)               \
+  V(ChangeInt32ToFloat64)                \
+  V(ChangeInt32ToInt64)                  \
+  V(ChangeInt64ToFloat64)                \
+  V(ChangeTaggedToCompressed)            \
+  V(ChangeUint32ToFloat64)               \
+  V(ChangeUint32ToUint64)                \
+  V(Float64Abs)                          \
+  V(Float64ExtractHighWord32)            \
+  V(Float64ExtractLowWord32)             \
+  V(Float64SilenceNaN)                   \
+  V(RoundFloat64ToInt32)                 \
+  V(TruncateFloat64ToInt64)              \
+  V(TruncateFloat64ToWord32)             \
+  V(TruncateInt64ToInt32)                \
+  V(Word32ReverseBytes)                  \
+  V(Word64ReverseBytes)
+
 #define PURE_ASSEMBLER_MACH_BINOP_LIST(V) \
-  V(WordShl)                              \
-  V(WordSar)                              \
-  V(WordAnd)                              \
-  V(Word32Or)                             \
-  V(Word32And)                            \
-  V(Word32Xor)                            \
-  V(Word32Shr)                            \
-  V(Word32Shl)                            \
-  V(Word32Sar)                            \
-  V(Word64And)                            \
-  V(IntAdd)                               \
-  V(IntSub)                               \
-  V(IntMul)                               \
-  V(IntLessThan)                          \
-  V(UintLessThan)                         \
+  V(Float64Add)                           \
+  V(Float64Div)                           \
+  V(Float64Equal)                         \
+  V(Float64InsertHighWord32)              \
+  V(Float64InsertLowWord32)               \
+  V(Float64LessThan)                      \
+  V(Float64LessThanOrEqual)               \
+  V(Float64Mod)                           \
+  V(Float64Sub)                           \
   V(Int32Add)                             \
-  V(Int32Sub)                             \
-  V(Int32Mul)                             \
+  V(Int32LessThan)                        \
   V(Int32LessThanOrEqual)                 \
+  V(Int32Mul)                             \
+  V(Int32Sub)                             \
+  V(Int64Sub)                             \
+  V(IntAdd)                               \
+  V(IntLessThan)                          \
+  V(IntMul)                               \
+  V(IntSub)                               \
   V(Uint32LessThan)                       \
   V(Uint32LessThanOrEqual)                \
   V(Uint64LessThan)                       \
   V(Uint64LessThanOrEqual)                \
-  V(Int32LessThan)                        \
-  V(Int64Sub)                             \
-  V(Float64Add)                           \
-  V(Float64Sub)                           \
-  V(Float64Div)                           \
-  V(Float64Mod)                           \
-  V(Float64Equal)                         \
-  V(Float64LessThan)                      \
-  V(Float64LessThanOrEqual)               \
-  V(Float64InsertLowWord32)               \
-  V(Float64InsertHighWord32)              \
+  V(UintLessThan)                         \
+  V(Word32And)                            \
   V(Word32Equal)                          \
+  V(Word32Or)                             \
+  V(Word32Sar)                            \
+  V(Word32Shl)                            \
+  V(Word32Shr)                            \
+  V(Word32Xor)                            \
+  V(Word64And)                            \
   V(Word64Equal)                          \
-  V(WordEqual)
+  V(WordAnd)                              \
+  V(WordEqual)                            \
+  V(WordSar)                              \
+  V(WordShl)
 
 #define CHECKED_ASSEMBLER_MACH_BINOP_LIST(V) \
   V(Int32AddWithOverflow)                    \
-  V(Int32SubWithOverflow)                    \
-  V(Int32MulWithOverflow)                    \
-  V(Int32Mod)                                \
   V(Int32Div)                                \
-  V(Uint32Mod)                               \
-  V(Uint32Div)
+  V(Int32Mod)                                \
+  V(Int32MulWithOverflow)                    \
+  V(Int32SubWithOverflow)                    \
+  V(Uint32Div)                               \
+  V(Uint32Mod)
 
-#define JSGRAPH_SINGLETON_CONSTANT_LIST(V)        \
-  V(TrueConstant)                                 \
-  V(FalseConstant)                                \
-  V(NullConstant)                                 \
-  V(BigIntMapConstant)                            \
-  V(BooleanMapConstant)                           \
-  V(HeapNumberMapConstant)                        \
-  V(NoContextConstant)                            \
-  V(EmptyStringConstant)                          \
-  V(UndefinedConstant)                            \
-  V(TheHoleConstant)                              \
-  V(FixedArrayMapConstant)                        \
-  V(FixedDoubleArrayMapConstant)                  \
-  V(ToNumberBuiltinConstant)                      \
-  V(AllocateInYoungGenerationStubConstant)        \
-  V(AllocateRegularInYoungGenerationStubConstant) \
-  V(AllocateInOldGenerationStubConstant)          \
-  V(AllocateRegularInOldGenerationStubConstant)
+#define JSGRAPH_SINGLETON_CONSTANT_LIST(V) \
+  V(AllocateInOldGenerationStub)           \
+  V(AllocateInYoungGenerationStub)         \
+  V(AllocateRegularInOldGenerationStub)    \
+  V(AllocateRegularInYoungGenerationStub)  \
+  V(BigIntMap)                             \
+  V(BooleanMap)                            \
+  V(EmptyString)                           \
+  V(False)                                 \
+  V(FixedArrayMap)                         \
+  V(FixedDoubleArrayMap)                   \
+  V(HeapNumberMap)                         \
+  V(NaN)                                   \
+  V(NoContext)                             \
+  V(Null)                                  \
+  V(One)                                   \
+  V(TheHole)                               \
+  V(ToNumberBuiltin)                       \
+  V(True)                                  \
+  V(Undefined)                             \
+  V(Zero)
 
 class GraphAssembler;
 
@@ -125,8 +128,9 @@ class GraphAssemblerLabel {
   Node* PhiAt(size_t index);
 
   template <typename... Reps>
-  explicit GraphAssemblerLabel(GraphAssemblerLabelType type, Reps... reps)
-      : type_(type) {
+  explicit GraphAssemblerLabel(GraphAssemblerLabelType type,
+                               BasicBlock* basic_block, Reps... reps)
+      : type_(type), basic_block_(basic_block) {
     STATIC_ASSERT(VarCount == sizeof...(reps));
     MachineRepresentation reps_array[] = {MachineRepresentation::kNone,
                                           reps...};
@@ -149,9 +153,11 @@ class GraphAssemblerLabel {
     return type_ == GraphAssemblerLabelType::kDeferred;
   }
   bool IsLoop() const { return type_ == GraphAssemblerLabelType::kLoop; }
+  BasicBlock* basic_block() { return basic_block_; }
 
   bool is_bound_ = false;
   GraphAssemblerLabelType const type_;
+  BasicBlock* basic_block_;
   size_t merged_count_ = 0;
   Node* effect_;
   Node* control_;
@@ -159,40 +165,46 @@ class GraphAssemblerLabel {
   MachineRepresentation representations_[VarCount + 1];
 };
 
-class GraphAssembler {
+class V8_EXPORT_PRIVATE GraphAssembler {
  public:
-  GraphAssembler(JSGraph* jsgraph, Node* effect, Node* control, Zone* zone);
+  // Constructs a GraphAssembler. If {schedule} is not null, the graph assembler
+  // will maintain the schedule as it updates blocks.
+  GraphAssembler(JSGraph* jsgraph, Zone* zone, Schedule* schedule = nullptr);
+  virtual ~GraphAssembler();
 
-  void Reset(Node* effect, Node* control);
+  void Reset(BasicBlock* block);
+  void InitializeEffectControl(Node* effect, Node* control);
 
   // Create label.
   template <typename... Reps>
-  static GraphAssemblerLabel<sizeof...(Reps)> MakeLabelFor(
+  GraphAssemblerLabel<sizeof...(Reps)> MakeLabelFor(
       GraphAssemblerLabelType type, Reps... reps) {
-    return GraphAssemblerLabel<sizeof...(Reps)>(type, reps...);
+    return GraphAssemblerLabel<sizeof...(Reps)>(
+        type, NewBasicBlock(type == GraphAssemblerLabelType::kDeferred),
+        reps...);
   }
 
   // Convenience wrapper for creating non-deferred labels.
   template <typename... Reps>
-  static GraphAssemblerLabel<sizeof...(Reps)> MakeLabel(Reps... reps) {
+  GraphAssemblerLabel<sizeof...(Reps)> MakeLabel(Reps... reps) {
     return MakeLabelFor(GraphAssemblerLabelType::kNonDeferred, reps...);
   }
 
   // Convenience wrapper for creating loop labels.
   template <typename... Reps>
-  static GraphAssemblerLabel<sizeof...(Reps)> MakeLoopLabel(Reps... reps) {
+  GraphAssemblerLabel<sizeof...(Reps)> MakeLoopLabel(Reps... reps) {
     return MakeLabelFor(GraphAssemblerLabelType::kLoop, reps...);
   }
 
   // Convenience wrapper for creating deferred labels.
   template <typename... Reps>
-  static GraphAssemblerLabel<sizeof...(Reps)> MakeDeferredLabel(Reps... reps) {
+  GraphAssemblerLabel<sizeof...(Reps)> MakeDeferredLabel(Reps... reps) {
     return MakeLabelFor(GraphAssemblerLabelType::kDeferred, reps...);
   }
 
   // Value creation.
   Node* IntPtrConstant(intptr_t value);
-  Node* Uint32Constant(int32_t value);
+  Node* Uint32Constant(uint32_t value);
   Node* Int32Constant(int32_t value);
   Node* Int64Constant(int64_t value);
   Node* UniqueIntPtrConstant(intptr_t value);
@@ -206,9 +218,13 @@ class GraphAssembler {
 
   Node* LoadFramePointer();
 
-#define SINGLETON_CONST_DECL(Name) Node* Name();
+#define SINGLETON_CONST_DECL(Name) Node* Name##Constant();
   JSGRAPH_SINGLETON_CONSTANT_LIST(SINGLETON_CONST_DECL)
 #undef SINGLETON_CONST_DECL
+
+#define SINGLETON_CONST_TEST_DECL(Name) Node* Is##Name(Node* value);
+  JSGRAPH_SINGLETON_CONSTANT_LIST(SINGLETON_CONST_TEST_DECL)
+#undef SINGLETON_CONST_TEST_DECL
 
 #define PURE_UNOP_DECL(Name) Node* Name(Node* input);
   PURE_ASSEMBLER_MACH_UNOP_LIST(PURE_UNOP_DECL)
@@ -227,6 +243,9 @@ class GraphAssembler {
   Node* IntPtrEqual(Node* left, Node* right);
   Node* TaggedEqual(Node* left, Node* right);
 
+  Node* SmiSub(Node* left, Node* right);
+  Node* SmiLessThan(Node* left, Node* right);
+
   Node* Float64RoundDown(Node* value);
   Node* Float64RoundTruncate(Node* value);
 
@@ -240,6 +259,20 @@ class GraphAssembler {
   Node* StoreField(FieldAccess const&, Node* object, Node* value);
   Node* StoreElement(ElementAccess const&, Node* object, Node* index,
                      Node* value);
+  Node* StringLength(Node* string);
+  Node* ReferenceEqual(Node* lhs, Node* rhs);
+  Node* NumberMin(Node* lhs, Node* rhs);
+  Node* NumberMax(Node* lhs, Node* rhs);
+  Node* NumberLessThan(Node* lhs, Node* rhs);
+  Node* NumberAdd(Node* lhs, Node* rhs);
+  Node* StringSubstring(Node* string, Node* from, Node* to);
+  Node* ObjectIsCallable(Node* value);
+  Node* NumberIsFloat64Hole(Node* value);
+
+  Node* TypeGuard(Type type, Node* value);
+  Node* Checkpoint(Node* frame_state);
+  Node* LoopExit(Node* loop_header);
+  Node* LoopExitEffect();
 
   Node* Store(StoreRepresentation rep, Node* object, Node* offset, Node* value);
   Node* Load(MachineType type, Node* object, Node* offset);
@@ -274,6 +307,11 @@ class GraphAssembler {
   void Goto(GraphAssemblerLabel<sizeof...(Vars)>* label, Vars...);
 
   void Branch(Node* condition, GraphAssemblerLabel<0u>* if_true,
+              GraphAssemblerLabel<0u>* if_false, BranchHint hint,
+              IsSafetyCheck is_safety_check = IsSafetyCheck::kNoSafetyCheck);
+  // Branch hints in this version are inferred from if_true/if_false deferred
+  // states.
+  void Branch(Node* condition, GraphAssemblerLabel<0u>* if_true,
               GraphAssemblerLabel<0u>* if_false,
               IsSafetyCheck is_safety_check = IsSafetyCheck::kNoSafetyCheck);
 
@@ -288,19 +326,41 @@ class GraphAssembler {
   void GotoIfNot(Node* condition, GraphAssemblerLabel<sizeof...(Vars)>* label,
                  Vars...);
 
-  // Extractors (should be only used when destructing/resetting the assembler).
-  Node* ExtractCurrentControl();
-  Node* ExtractCurrentEffect();
+  // Updates current effect and control based on outputs of {node}.
+  V8_INLINE void UpdateEffectControlWith(Node* node) {
+    if (node->op()->EffectOutputCount() > 0) {
+      effect_ = node;
+    }
+    if (node->op()->ControlOutputCount() > 0) {
+      control_ = node;
+    }
+  }
 
- private:
-  // Adds a decompression node if pointer compression is enabled and the
-  // representation loaded is a compressed one. To be used after loads.
-  Node* InsertDecompressionIfNeeded(MachineRepresentation rep, Node* value);
-  // Adds a compression node if pointer compression is enabled and the
-  // representation to be stored is a compressed one. To be used before stores.
-  Node* InsertCompressionIfNeeded(MachineRepresentation rep, Node* value);
+  // Adds {node} to the current position and updates assembler's current effect
+  // and control.
+  Node* AddNode(Node* node);
+
+  // Finalizes the {block} being processed by the assembler, returning the
+  // finalized block (which may be different from the original block).
+  BasicBlock* FinalizeCurrentBlock(BasicBlock* block);
+
+  void ConnectUnreachableToEnd();
+
+  Node* control() { return control_; }
+  Node* effect() { return effect_; }
+
+ protected:
+  class BasicBlockUpdater;
+
   template <typename... Vars>
   void MergeState(GraphAssemblerLabel<sizeof...(Vars)>* label, Vars... vars);
+  BasicBlock* NewBasicBlock(bool deferred);
+  void BindBasicBlock(BasicBlock* block);
+  void GotoBasicBlock(BasicBlock* block);
+  void GotoIfBasicBlock(BasicBlock* block, Node* branch,
+                        IrOpcode::Value goto_if);
+
+  V8_INLINE Node* AddClonedNode(Node* node);
 
   Operator const* ToNumberOperator();
 
@@ -317,8 +377,9 @@ class GraphAssembler {
   SetOncePointer<Operator const> to_number_operator_;
   Zone* temp_zone_;
   JSGraph* jsgraph_;
-  Node* current_effect_;
-  Node* current_control_;
+  Node* effect_;
+  Node* control_;
+  std::unique_ptr<BasicBlockUpdater> block_updater_;
 };
 
 template <size_t VarCount>
@@ -336,10 +397,10 @@ void GraphAssembler::MergeState(GraphAssemblerLabel<sizeof...(Vars)>* label,
   if (label->IsLoop()) {
     if (merged_count == 0) {
       DCHECK(!label->IsBound());
-      label->control_ = graph()->NewNode(common()->Loop(2), current_control_,
-                                         current_control_);
-      label->effect_ = graph()->NewNode(common()->EffectPhi(2), current_effect_,
-                                        current_effect_, label->control_);
+      label->control_ =
+          graph()->NewNode(common()->Loop(2), control(), control());
+      label->effect_ = graph()->NewNode(common()->EffectPhi(2), effect(),
+                                        effect(), label->control_);
       Node* terminate = graph()->NewNode(common()->Terminate(), label->effect_,
                                          label->control_);
       NodeProperties::MergeControlToEnd(graph(), common(), terminate);
@@ -351,8 +412,8 @@ void GraphAssembler::MergeState(GraphAssemblerLabel<sizeof...(Vars)>* label,
     } else {
       DCHECK(label->IsBound());
       DCHECK_EQ(1, merged_count);
-      label->control_->ReplaceInput(1, current_control_);
-      label->effect_->ReplaceInput(1, current_effect_);
+      label->control_->ReplaceInput(1, control());
+      label->effect_->ReplaceInput(1, effect());
       for (size_t i = 0; i < sizeof...(vars); i++) {
         label->bindings_[i]->ReplaceInput(1, var_array[i + 1]);
       }
@@ -362,17 +423,17 @@ void GraphAssembler::MergeState(GraphAssemblerLabel<sizeof...(Vars)>* label,
     if (merged_count == 0) {
       // Just set the control, effect and variables directly.
       DCHECK(!label->IsBound());
-      label->control_ = current_control_;
-      label->effect_ = current_effect_;
+      label->control_ = control();
+      label->effect_ = effect();
       for (size_t i = 0; i < sizeof...(vars); i++) {
         label->bindings_[i] = var_array[i + 1];
       }
     } else if (merged_count == 1) {
       // Create merge, effect phi and a phi for each variable.
-      label->control_ = graph()->NewNode(common()->Merge(2), label->control_,
-                                         current_control_);
+      label->control_ =
+          graph()->NewNode(common()->Merge(2), label->control_, control());
       label->effect_ = graph()->NewNode(common()->EffectPhi(2), label->effect_,
-                                        current_effect_, label->control_);
+                                        effect(), label->control_);
       for (size_t i = 0; i < sizeof...(vars); i++) {
         label->bindings_[i] = graph()->NewNode(
             common()->Phi(label->representations_[i], 2), label->bindings_[i],
@@ -381,12 +442,12 @@ void GraphAssembler::MergeState(GraphAssemblerLabel<sizeof...(Vars)>* label,
     } else {
       // Append to the merge, effect phi and phis.
       DCHECK_EQ(IrOpcode::kMerge, label->control_->opcode());
-      label->control_->AppendInput(graph()->zone(), current_control_);
+      label->control_->AppendInput(graph()->zone(), control());
       NodeProperties::ChangeOp(label->control_,
                                common()->Merge(merged_count + 1));
 
       DCHECK_EQ(IrOpcode::kEffectPhi, label->effect_->opcode());
-      label->effect_->ReplaceInput(merged_count, current_effect_);
+      label->effect_->ReplaceInput(merged_count, effect());
       label->effect_->AppendInput(graph()->zone(), label->control_);
       NodeProperties::ChangeOp(label->effect_,
                                common()->EffectPhi(merged_count + 1));
@@ -406,24 +467,39 @@ void GraphAssembler::MergeState(GraphAssemblerLabel<sizeof...(Vars)>* label,
 
 template <size_t VarCount>
 void GraphAssembler::Bind(GraphAssemblerLabel<VarCount>* label) {
-  DCHECK_NULL(current_control_);
-  DCHECK_NULL(current_effect_);
+  DCHECK_NULL(control());
+  DCHECK_NULL(effect());
   DCHECK_LT(0, label->merged_count_);
 
-  current_control_ = label->control_;
-  current_effect_ = label->effect_;
+  control_ = label->control_;
+  effect_ = label->effect_;
+  BindBasicBlock(label->basic_block());
 
   label->SetBound();
+
+  if (label->merged_count_ > 1 || label->IsLoop()) {
+    AddNode(label->control_);
+    AddNode(label->effect_);
+    for (size_t i = 0; i < VarCount; i++) {
+      AddNode(label->bindings_[i]);
+    }
+  } else {
+    // If the basic block does not have a control node, insert a dummy
+    // Merge node, so that other passes have a control node to start from.
+    control_ = AddNode(graph()->NewNode(common()->Merge(1), control()));
+  }
 }
 
 template <typename... Vars>
 void GraphAssembler::Goto(GraphAssemblerLabel<sizeof...(Vars)>* label,
                           Vars... vars) {
-  DCHECK_NOT_NULL(current_control_);
-  DCHECK_NOT_NULL(current_effect_);
+  DCHECK_NOT_NULL(control());
+  DCHECK_NOT_NULL(effect());
   MergeState(label, vars...);
-  current_control_ = nullptr;
-  current_effect_ = nullptr;
+  GotoBasicBlock(label->basic_block());
+
+  control_ = nullptr;
+  effect_ = nullptr;
 }
 
 template <typename... Vars>
@@ -432,13 +508,13 @@ void GraphAssembler::GotoIf(Node* condition,
                             Vars... vars) {
   BranchHint hint =
       label->IsDeferred() ? BranchHint::kFalse : BranchHint::kNone;
-  Node* branch =
-      graph()->NewNode(common()->Branch(hint), condition, current_control_);
+  Node* branch = graph()->NewNode(common()->Branch(hint), condition, control());
 
-  current_control_ = graph()->NewNode(common()->IfTrue(), branch);
+  control_ = graph()->NewNode(common()->IfTrue(), branch);
   MergeState(label, vars...);
 
-  current_control_ = graph()->NewNode(common()->IfFalse(), branch);
+  GotoIfBasicBlock(label->basic_block(), branch, IrOpcode::kIfTrue);
+  control_ = AddNode(graph()->NewNode(common()->IfFalse(), branch));
 }
 
 template <typename... Vars>
@@ -446,13 +522,13 @@ void GraphAssembler::GotoIfNot(Node* condition,
                                GraphAssemblerLabel<sizeof...(Vars)>* label,
                                Vars... vars) {
   BranchHint hint = label->IsDeferred() ? BranchHint::kTrue : BranchHint::kNone;
-  Node* branch =
-      graph()->NewNode(common()->Branch(hint), condition, current_control_);
+  Node* branch = graph()->NewNode(common()->Branch(hint), condition, control());
 
-  current_control_ = graph()->NewNode(common()->IfFalse(), branch);
+  control_ = graph()->NewNode(common()->IfFalse(), branch);
   MergeState(label, vars...);
 
-  current_control_ = graph()->NewNode(common()->IfTrue(), branch);
+  GotoIfBasicBlock(label->basic_block(), branch, IrOpcode::kIfFalse);
+  control_ = AddNode(graph()->NewNode(common()->IfTrue(), branch));
 }
 
 template <typename... Args>
@@ -465,13 +541,13 @@ Node* GraphAssembler::Call(const CallDescriptor* call_descriptor,
 template <typename... Args>
 Node* GraphAssembler::Call(const Operator* op, Args... args) {
   DCHECK_EQ(IrOpcode::kCall, op->opcode());
-  Node* args_array[] = {args..., current_effect_, current_control_};
+  Node* args_array[] = {args..., effect(), control()};
   int size = static_cast<int>(sizeof...(args)) + op->EffectInputCount() +
              op->ControlInputCount();
   Node* call = graph()->NewNode(op, size, args_array);
   DCHECK_EQ(0, op->ControlOutputCount());
-  current_effect_ = call;
-  return call;
+  effect_ = call;
+  return AddNode(call);
 }
 
 }  // namespace compiler

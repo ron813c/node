@@ -134,13 +134,12 @@ int InstructionScheduler::GetTargetInstructionFlags(
     case kS390_LoadReverse16RR:
     case kS390_LoadReverse32RR:
     case kS390_LoadReverse64RR:
+    case kS390_LoadReverseSimd128RR:
+    case kS390_LoadReverseSimd128:
     case kS390_LoadAndTestWord32:
     case kS390_LoadAndTestWord64:
     case kS390_LoadAndTestFloat32:
     case kS390_LoadAndTestFloat64:
-    case kS390_DecompressSigned:
-    case kS390_DecompressPointer:
-    case kS390_DecompressAny:
     case kS390_CompressSigned:
     case kS390_CompressPointer:
     case kS390_CompressAny:
@@ -165,6 +164,7 @@ int InstructionScheduler::GetTargetInstructionFlags(
     case kS390_StoreWord16:
     case kS390_StoreWord32:
     case kS390_StoreWord64:
+    case kS390_StoreReverseSimd128:
     case kS390_StoreReverse16:
     case kS390_StoreReverse32:
     case kS390_StoreReverse64:
